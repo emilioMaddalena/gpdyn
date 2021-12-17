@@ -1,16 +1,5 @@
-#%%
 
 import numpy as np
-#import pandas as pd
-#import matplotlib.pyplot as plt
-#import json
-
-#import gpflow
-#import seaborn as sns
-#import tensorflow as tf
-#import tensorflow_probability as tfp
-#from gpflow.utilities import print_summary, set_trainable
-#from sklearn.metrics import pairwise_distances 
 
 class GpDynModel:
     """
