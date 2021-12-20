@@ -20,7 +20,7 @@ class GpDynModel:
         self.name = name
 
         self._data_was_loaded = False
-        self._data_was_filtered = False
+        self._model_was_trained = False
 
     def load_data(self, Y, U=None, W=None):
         """
@@ -30,6 +30,7 @@ class GpDynModel:
             W: np.array of shape (W, N). W is the number of exogenous signals and N is the number of data.
         """
 
+        Y = np.array(Y).reshape(1,-1)
         check_data_shapes(Y, U, W)
 
         self.Y = Y
@@ -53,16 +54,16 @@ class GpDynModel:
         kernel = gpflow.kernels.Matern52()
         gp = gpflow.models.GPR(data, kernel=kernel)
         
-        print("\nPre-training:")
-        print_summary(gp)
+        #print("\nPre-training:")
+        #print_summary(gp)
         opt = gpflow.optimizers.Scipy()
         opt.minimize(gp.training_loss, 
                      gp.trainable_variables, 
                      tol=1e-8, 
                      method='l-bfgs-b',
                      options=dict(maxiter=1000))
-        print("\nPost-training:")
-        print_summary(gp)
+        #print("\nPost-training:")
+        #print_summary(gp)
 
         self.gp = gp
         self._model_was_trained = True
@@ -75,7 +76,7 @@ class GpDynModel:
 
         feats, labels = create_features_labels(Y, U, W, self.delays)
         
-        horizon = horizon + 1 # temporary augmentation. + 1 for the 'support points'
+        horizon += 1 
         max_label_delay = self.delays[0]
 
         # rouding the test_dataset to a multiple of the horizon
@@ -91,7 +92,7 @@ class GpDynModel:
         feats_open_loop = np.copy(feats)
         # predict in batches
         for step in range(horizon):
-            m, v = self.gp.predict_f(feats_open_loop[:,step::horizon].T) # gpflow adopts the reverse convention
+            m, v = self.gp.predict_f(feats_open_loop[:,step::horizon].T) 
             mean_pred[step::horizon] = m.numpy().reshape(-1,)
             var_pred[step::horizon] = v.numpy().reshape(-1,)
             # propagate forward the prediction, not violating the horizon window
@@ -106,10 +107,6 @@ class GpDynModel:
 
 if __name__ == '__main__':
 
-    #X = np.random.rand(3,10)
-    #Y = np.random.rand(1,10)
-    
-    #X = np.stack([np.arange(1,10+1), np.arange(1,10+1)])
     X = np.stack([np.arange(1.0,10.0+1), np.arange(101.0,110.0+1)])
     Y = np.arange(1.0,10.0+1).reshape(1,-1)
     delays = 2
